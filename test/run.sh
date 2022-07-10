@@ -1,0 +1,43 @@
+#! /bin/bash
+
+set -o pipefail
+set -e
+shopt -s extglob
+
+image_name=$1
+container_name=wb_dotfiles_test_${image_name//+([^A-Za-z0-9])/__}
+dir=${VOLUME_DIR:-$HOME/git/dotfiles}
+
+# nl -bn could be an alternative
+indent() { sed 's/^/  /';}
+
+printf "Starting container with mounted dir $dir...\n"
+if ! docker run -d -v $dir:/home/dotfiles --name $container_name -it $image_name sleep 1d
+then
+    printf "Failed to start docker container $image_name\n"
+    exit 1
+fi
+
+printf "Waiting for ready\n" 
+until [ "`docker inspect -f {{.State.Running}} $container_name`"=="true" ]; do
+    printf "."
+    sleep 0.3;
+done;
+
+printf "Running Setup\n"
+failed=false
+if ! docker exec -it $container_name /home/dotfiles/setup.sh | indent
+then
+    printf "***************\nFailed to setup\n***************\n"
+    failed=true
+fi
+
+printf "Removing docker image\n"
+docker rm -f $container_name | indent
+[[ -n "$1" ]] && echo "$1" | indent
+printf "Image removed."
+
+if $failed
+then
+    exit 1
+fi
