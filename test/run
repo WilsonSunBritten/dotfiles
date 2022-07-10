@@ -1,4 +1,4 @@
-#! /bin/bash
+#/usr/bin/env bash
 
 set -o pipefail
 set -e
@@ -12,6 +12,7 @@ dir=${VOLUME_DIR:-$HOME/git/dotfiles}
 indent() { sed 's/^/  /';}
 
 printf "Starting container with mounted dir $dir...\n"
+# The choice to mount to /home is important for the mac os test image. Usig something like /root leads to permission errors
 if ! docker run -d -v $dir:/home/dotfiles --name $container_name -it $image_name sleep 1d
 then
     printf "Failed to start docker container $image_name\n"

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# TODO if any fail exit.
+./test/run "ubuntu:latest"
+./test/run "debian"
+./test/run "sickcodes/docker-osx:auto"

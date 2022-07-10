@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+set -e
+
+os=$(uname -s)
+function get_file() {
+    echo ${BASH_SOURCE%/*}/$1
+}
+common_app_file=$(get_file common_app_list.txt)
+
+
+function install_brew {
+    if ! brew list $1 2&>1 > /dev/null
+    then
+        echo "Installing $1"
+        brew install $1
+    else
+        echo "$1 already installed"
+    fi
+}
+
+function install_apt_package {
+    if ! dpkg -l $1 2&>1 >/dev/null
+    then
+        echo "Installing $1..."
+        sudo apt-get install -yq $1 >/dev/null
+    else
+        echo "$1 already installed"
+    fi
+}
+
+function install_linux() {
+    while IFS="" read -r p || [ -n "$p" ]
+    do
+        install_apt_package $p
+    done < $1
+}
+
+function install_osx() {
+    while IFS="" read -r p || [ -n "$p" ]
+    do
+        install_brew $p
+    done < $1
+}
+
+case $os in
+Linux)
+    # append linux only apps to list + install
+    install_linux $common_app_file
+    install_linux $(get_file linux_only_app_list.txt)
+    ;;
+Darwin)
+    # append mac only apps to list + install
+    install_osx $common_app_file
+    install_osx $(get_file osx_only_app_list.txt)
+    ;;
+*)
+    echo "Unknown OS ($os)"
+esac
+
+echo $app_list
