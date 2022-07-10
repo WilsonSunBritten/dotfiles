@@ -6,6 +6,7 @@ sast:
 mac-test:
   stage: test
   image: sickcodes/docker-osx:auto
-  command: ls
+  script: 
+    - ls
 include:
 - template: Security/SAST.gitlab-ci.yml
